@@ -57,4 +57,11 @@ mod tests {
         assert_eq!(rover.name, String::from("some name"));
         assert_eq!(rover.point, Point::new(3, 4));
     }
+
+    #[test]
+    fn init_plateau() {
+        let plateau = Plateau::new(Point(0, 0), Point(100, 100));
+        assert_eq!(plateau.sw, Point(0, 0));
+        assert_eq!(plateau.ne, Point(100, 100));
+    }
 }
