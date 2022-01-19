@@ -29,7 +29,8 @@ impl PartialEq for Point {
 struct Rover {
     name: String,
     point: Point,
-    direction: Direction
+    direction: Direction,
+    plateau: Plateau,
 }
 
 // -- Plateau
@@ -47,18 +48,32 @@ impl Plateau {
         }
     }
 
-    fn is_valid(&self, point: Point) -> bool {
+    fn is_valid(&self, point: &Point) -> bool {
         point.x <= self.ne.x && point.x >= self.sw.x && point.y <= self.ne.y && point.y >= self.sw.y
     }
 
 }
 
 impl Rover {
-    fn new(name: String, point: Point, direction: Direction) -> Self {
+    fn new(name: String, point: Point, direction: Direction, plateau: Plateau) -> Self {
         Self {
             name: name,
             point: point,
-            direction: direction
+            direction: direction,
+            plateau: plateau,
+        }
+    }
+
+    fn crawl(&mut self) {
+        let next_point = match self.direction {
+            Direction::North => Point::new(self.point.x, self.point.y + 1),
+            Direction::East => Point::new(self.point.x + 1, self.point.y),
+            Direction::South => Point::new(self.point.x, self.point.y - 1),
+            Direction::West => Point::new(self.point.x -1, self.point.y),
+        };
+        if self.plateau.is_valid(&next_point) {
+            self.point.x = next_point.x;
+            self.point.y = next_point.y;
         }
     }
 }
@@ -70,13 +85,31 @@ mod tests {
 
     #[test]
     fn init_rover() {
-        let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East);
+        let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
+        let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau);
         match rover.direction {
             Direction::East => assert!(true),
             _ => assert!(false),
         }
         assert_eq!(rover.name, String::from("some name"));
         assert_eq!(rover.point, Point::new(3, 4));
+    }
+
+    #[test]
+    fn crawl_rover() {
+        let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
+        let mut rover = Rover::new(
+            String::from("some name"),
+            Point::new(9,9),
+            Direction::East,
+            plateau
+        );
+        rover.crawl();
+        assert_eq!(rover.point, Point::new(10, 9));
+
+        rover.crawl();
+        // end of plateau, should no longer move
+        assert_eq!(rover.point, Point::new(10, 9));
     }
 
     #[test]
@@ -89,13 +122,11 @@ mod tests {
     #[test]
     fn is_point_on_plateau() {
         let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
-        assert!(plateau.is_valid(Point::new(1, 1)));
+        assert!(plateau.is_valid(&Point::new(1, 1)));
 
-        assert!(!plateau.is_valid(Point::new(0, 1)));
-        assert!(!plateau.is_valid(Point::new(1, 0)));
-        assert!(!plateau.is_valid(Point::new(101, 1)));
-        assert!(!plateau.is_valid(Point::new(1, 101)));
+        assert!(!plateau.is_valid(&Point::new(0, 1)));
+        assert!(!plateau.is_valid(&Point::new(1, 0)));
+        assert!(!plateau.is_valid(&Point::new(101, 1)));
+        assert!(!plateau.is_valid(&Point::new(1, 101)));
     }
-
-
 }
