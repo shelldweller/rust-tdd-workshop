@@ -56,12 +56,16 @@ impl Plateau {
 
 impl Rover {
     fn new(name: String, point: Point, direction: Direction, plateau: Plateau) -> Result<Self, String> {
-        Ok(Self {
-            name: name,
-            point: point,
-            direction: direction,
-            plateau: plateau,
-        })
+        if plateau.is_valid(&point) {
+            Ok(Self {
+                name: name,
+                point: point,
+                direction: direction,
+                plateau: plateau,
+            })
+        } else {
+            Err(String::from(format!("Point {:?} is not on plateau", point)))
+        }
     }
 
     fn step(&mut self) {
