@@ -55,13 +55,13 @@ impl Plateau {
 }
 
 impl Rover {
-    fn new(name: String, point: Point, direction: Direction, plateau: Plateau) -> Self {
-        Self {
+    fn new(name: String, point: Point, direction: Direction, plateau: Plateau) -> Result<Self, String> {
+        Ok(Self {
             name: name,
             point: point,
             direction: direction,
             plateau: plateau,
-        }
+        })
     }
 
     fn step(&mut self) {
@@ -84,9 +84,9 @@ mod tests {
     use super::{Point, Direction, Rover, Plateau};
 
     #[test]
-    fn init_rover() {
+    fn init_rover_success() {
         let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
-        let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau);
+        let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau).unwrap();
         match rover.direction {
             Direction::East => assert!(true),
             _ => assert!(false),
@@ -103,7 +103,7 @@ mod tests {
             Point::new(9,9),
             Direction::East,
             plateau
-        );
+        ).unwrap();
         rover.step();
         assert_eq!(rover.point, Point::new(10, 9));
 
