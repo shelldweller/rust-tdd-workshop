@@ -1,3 +1,5 @@
+use std::cmp;
+
 enum Direction {
     North,
     East,
@@ -41,7 +43,15 @@ struct Plateau {
 }
 
 impl Plateau {
-    fn new(sw: Point, ne: Point) -> Self {
+    fn new(point1: Point, point2: Point) -> Self {
+        let sw = Point::new(
+            cmp::min(point1.x, point2.x),
+            cmp::min(point1.y, point2.y),
+        );
+        let ne = Point::new(
+            cmp::max(point1.x, point2.x),
+            cmp::max(point1.y, point2.y),
+        );
         Self {
             sw: sw,
             ne: ne,
@@ -124,10 +134,17 @@ mod tests {
     }
 
     #[test]
-    fn init_plateau() {
+    fn init_plateau_basic() {
         let plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
         assert_eq!(plateau.sw, Point::new(0, 0));
         assert_eq!(plateau.ne, Point::new(100, 100));
+    }
+
+    #[test]
+    fn init_plateau_flexible() {
+        let plateau = Plateau::new(Point::new(0, 0), Point::new(-100, 100));
+        assert_eq!(plateau.sw, Point::new(-100, 0));
+        assert_eq!(plateau.ne, Point::new(0, 100));
     }
 
     #[test]
