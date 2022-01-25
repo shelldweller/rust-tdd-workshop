@@ -64,7 +64,7 @@ impl Rover {
         }
     }
 
-    fn crawl(&mut self) {
+    fn step(&mut self) {
         let next_point = match self.direction {
             Direction::North => Point::new(self.point.x, self.point.y + 1),
             Direction::East => Point::new(self.point.x + 1, self.point.y),
@@ -96,7 +96,7 @@ mod tests {
     }
 
     #[test]
-    fn crawl_rover() {
+    fn step_rover() {
         let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
         let mut rover = Rover::new(
             String::from("some name"),
@@ -104,10 +104,10 @@ mod tests {
             Direction::East,
             plateau
         );
-        rover.crawl();
+        rover.step();
         assert_eq!(rover.point, Point::new(10, 9));
 
-        rover.crawl();
+        rover.step();
         // end of plateau, should no longer move
         assert_eq!(rover.point, Point::new(10, 9));
     }
