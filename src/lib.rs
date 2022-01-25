@@ -96,6 +96,13 @@ mod tests {
     }
 
     #[test]
+    fn init_rover_error() {
+        let plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+        let result = Rover::new(String::from("some name"), Point::new(0,0), Direction::East, plateau);
+        assert!(result.is_err())
+    }
+
+    #[test]
     fn step_rover() {
         let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
         let mut rover = Rover::new(
