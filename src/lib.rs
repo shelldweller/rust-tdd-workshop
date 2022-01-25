@@ -7,12 +7,12 @@ enum Direction {
 
 #[derive(Debug)]
 struct Point {
-    x: usize,
-    y: usize,
+    x: i64,
+    y: i64,
 }
 
 impl Point {
-    fn new(x: usize, y: usize) -> Self {
+    fn new(x: i64, y: i64) -> Self {
         Self {
             x: x,
             y: y
