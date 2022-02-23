@@ -8,7 +8,7 @@ enum Direction {
     West,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Point {
     x: i64,
     y: i64,
@@ -73,6 +73,37 @@ impl Plateau {
         return Ok(());
     }
 
+    fn move_rover(&mut self, name: &str) -> Result<(), &str> {
+        if !self.rover_exists(&name) {
+            return Err("Invalid rover name");
+        }
+        let rover = self.rovers.get(name).unwrap();
+
+        let next_point = match rover.direction {
+            Direction::North => Point::new(rover.point.x, rover.point.y + 1),
+            Direction::East => Point::new(rover.point.x + 1, rover.point.y),
+            Direction::South => Point::new(rover.point.x, rover.point.y - 1),
+            Direction::West => Point::new(rover.point.x -1, rover.point.y),
+        };
+        if self.contains(&next_point) {
+            // NOTE: Rust complains if rover is borrowed as mutable above and then call `self.contains` and change rover's point.
+            // Therefore it is borrowed again here.
+            // Is there a better workaround? (Replacing `self.contains` with its content also solves the problem.)
+            let mut rover = self.rovers.get_mut(name).unwrap();
+            rover.point.x = next_point.x;
+            rover.point.y = next_point.y;
+        }
+
+        Ok(())
+    }
+
+    fn rover_position(&self, name: &str) -> Result<Point, &str> {
+        if !self.rover_exists(&name) {
+            return Err("Invalid rover name");
+        }
+        Ok(self.rovers.get(name).unwrap().point)
+    }
+
     fn rover_exists(&self, name: &str) -> bool {
         self.rovers.contains_key(name)
     }
@@ -90,19 +121,6 @@ impl Rover {
             direction: direction,
         }
     }
-
-    // fn step(&mut self) {
-    //     let next_point = match self.direction {
-    //         Direction::North => Point::new(self.point.x, self.point.y + 1),
-    //         Direction::East => Point::new(self.point.x + 1, self.point.y),
-    //         Direction::South => Point::new(self.point.x, self.point.y - 1),
-    //         Direction::West => Point::new(self.point.x -1, self.point.y),
-    //     };
-    //     if self.plateau.is_valid(&next_point) {
-    //         self.point.x = next_point.x;
-    //         self.point.y = next_point.y;
-    //     }
-    // }
 }
 
 
@@ -120,23 +138,6 @@ mod tests {
     //     }
     //     assert_eq!(rover.name, String::from("some name"));
     //     assert_eq!(rover.point, Point::new(3, 4));
-    // }
-
-    // #[test]
-    // fn step_rover() {
-    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
-    //     let mut rover = Rover::new(
-    //         String::from("some name"),
-    //         Point::new(9,9),
-    //         Direction::East,
-    //         plateau
-    //     ).unwrap();
-    //     rover.step();
-    //     assert_eq!(rover.point, Point::new(10, 9));
-
-    //     rover.step();
-    //     // end of plateau, should no longer move
-    //     assert_eq!(rover.point, Point::new(10, 9));
     // }
 
     #[test]
@@ -175,7 +176,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-
     #[test]
     fn plateau_contains_point() {
         let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
@@ -188,6 +188,22 @@ mod tests {
         assert!(!plateau.contains(&Point::new(101, 1)));
         assert!(!plateau.contains(&Point::new(1, 101)));
         assert!(!plateau.contains(&Point::new(-1, 1001)));
+    }
+
+    #[test]
+    fn move_single_rover() {
+        let mut plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
+        plateau.add_rover(
+            String::from("R1"),
+            Point::new(9,9),
+            Direction::East,
+        ).unwrap();
+        plateau.move_rover("R1").unwrap();
+        assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(10, 9));
+
+        plateau.move_rover("R1").unwrap();
+        // end of plateau, should no longer move
+        assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(10, 9));
     }
 
     // #[test]
