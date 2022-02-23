@@ -69,7 +69,7 @@ impl Plateau {
         }
     }
 
-    fn add_rover(&mut self, name: String, point: Point, direction: Direction) -> Result<(), &str> {
+    fn add_rover(&mut self, name: &str, point: Point, direction: Direction) -> Result<(), &str> {
         if self.rover_exists(&name) {
             return Err("Rover already exists");
         }
@@ -83,7 +83,7 @@ impl Plateau {
         }
 
         let rover = Rover::new(point, direction);
-        self.rovers.insert(name, rover);
+        self.rovers.insert(String::from(name), rover);
         return Ok(());
     }
 
@@ -159,30 +159,30 @@ mod tests {
     #[test]
     fn add_rover_success() {
         let mut plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
-        plateau.add_rover(String::from("My Rover"), Point::new(0, 0), Direction::East).unwrap();
+        plateau.add_rover("My Rover", Point::new(0, 0), Direction::East).unwrap();
         assert_eq!(plateau.rover_exists("My Rover"), true);
     }
 
     #[test]
     fn add_rover_outside_of_plateau_error() {
         let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
-        let result = plateau.add_rover(String::from("R1"), Point::new(20, 20), Direction::East);
+        let result = plateau.add_rover("R1", Point::new(20, 20), Direction::East);
         assert!(result.is_err());
     }
 
     #[test]
     fn add_rover_multiple_times_error() {
         let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
-        plateau.add_rover(String::from("R1"), Point::new(5, 5), Direction::East).unwrap();
-        let result = plateau.add_rover(String::from("R1"), Point::new(6, 5), Direction::East);
+        plateau.add_rover("R1", Point::new(5, 5), Direction::East).unwrap();
+        let result = plateau.add_rover("R1", Point::new(6, 5), Direction::East);
         assert!(result.is_err());
     }
 
     #[test]
     fn add_rover_collision_error() {
         let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
-        plateau.add_rover(String::from("R1"), Point::new(5, 5), Direction::East).unwrap();
-        let result = plateau.add_rover(String::from("R2"), Point::new(5, 5), Direction::East);
+        plateau.add_rover("R1", Point::new(5, 5), Direction::East).unwrap();
+        let result = plateau.add_rover("R2", Point::new(5, 5), Direction::East);
         assert!(result.is_err());
     }
 
@@ -204,7 +204,7 @@ mod tests {
     fn move_single_rover() {
         let mut plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
         plateau.add_rover(
-            String::from("R1"),
+            "R1",
             Point::new(9,9),
             Direction::East,
         ).unwrap();
@@ -219,8 +219,8 @@ mod tests {
     #[test]
     fn move_multiple_rovers(){
         let mut plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
-        plateau.add_rover(String::from("R1"), Point::new(0, 1), Direction::East).unwrap();
-        plateau.add_rover(String::from("R2"), Point::new(1, 1), Direction::North).unwrap();
+        plateau.add_rover("R1", Point::new(0, 1), Direction::East).unwrap();
+        plateau.add_rover("R2", Point::new(1, 1), Direction::North).unwrap();
 
         // r1 cannot move east: r2 is blocking it
         plateau.move_rover("R1");
