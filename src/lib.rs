@@ -68,6 +68,10 @@ impl Plateau {
             return Err("Point outside of plateau");
         }
 
+        if self.has_rover_at(&point) {
+            return Err("Point is taken by another rover");
+        }
+
         let rover = Rover::new(point, direction);
         self.rovers.insert(name, rover);
         return Ok(());
@@ -85,7 +89,7 @@ impl Plateau {
             Direction::South => Point::new(rover.point.x, rover.point.y - 1),
             Direction::West => Point::new(rover.point.x -1, rover.point.y),
         };
-        if self.contains(&next_point) {
+        if self.contains(&next_point) && !self.has_rover_at(&next_point) {
             // NOTE: Rust complains if rover is borrowed as mutable above and then call `self.contains` and change rover's point.
             // Therefore it is borrowed again here.
             // Is there a better workaround? (Replacing `self.contains` with its content also solves the problem.)
@@ -108,6 +112,15 @@ impl Plateau {
         self.rovers.contains_key(name)
     }
 
+    fn has_rover_at(&self, point: &Point) -> bool {
+        for rover in self.rovers.values() {
+            if &rover.point == point {
+                return true
+            }
+        }
+        false
+    }
+
     fn contains(&self, point: &Point) -> bool {
         point.x <= self.ne.x && point.x >= self.sw.x && point.y <= self.ne.y && point.y >= self.sw.y
     }
@@ -127,18 +140,6 @@ impl Rover {
 #[cfg(test)]
 mod tests {
     use super::{Point, Direction, Rover, Plateau};
-
-    #[test]
-    // fn init_rover_success() {
-    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
-    //     let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau).unwrap();
-    //     match rover.direction {
-    //         Direction::East => assert!(true),
-    //         _ => assert!(false),
-    //     }
-    //     assert_eq!(rover.name, String::from("some name"));
-    //     assert_eq!(rover.point, Point::new(3, 4));
-    // }
 
     #[test]
     fn init_plateau_basic() {
@@ -177,6 +178,14 @@ mod tests {
     }
 
     #[test]
+    fn add_rover_collision_error() {
+        let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+        plateau.add_rover(String::from("R1"), Point::new(5, 5), Direction::East).unwrap();
+        let result = plateau.add_rover(String::from("R2"), Point::new(5, 5), Direction::East);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn plateau_contains_point() {
         let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
         assert!(plateau.contains(&Point::new(1, 1)));
@@ -206,42 +215,21 @@ mod tests {
         assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(10, 9));
     }
 
-    // #[test]
-    // fn move_collision(){
-    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
-    //     let mut rover1 = Rover::new(String::from("r1"), Point::new(0, 1), Direction::East, plateau).unwrap();
-    //     let mut rover2 = Rover::new(String::from("r2"), Point::new(1, 1), Direction::North, plateau).unwrap();
+    #[test]
+    fn move_multiple_rovers(){
+        let mut plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
+        plateau.add_rover(String::from("R1"), Point::new(0, 1), Direction::East).unwrap();
+        plateau.add_rover(String::from("R2"), Point::new(1, 1), Direction::North).unwrap();
 
-    //     // r1 cannot move east: r2 is blocking it
-    //     rover1.step();
-    //     assert_eq!(rover1.point, Point::new(0, 1));
+        // r1 cannot move east: r2 is blocking it
+        plateau.move_rover("R1");
+        assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(0, 1));
 
-    //     // Move r2
-    //     rover2.step();
+        // Move r2
+        plateau.move_rover("R2");
 
-    //     // Now r1 can move
-    //     rover1.step();
-    //     assert_eq!(rover1.point, Point::new(1, 1));
-    // }
-
-    // #[test]
-    // fn refactoring(){
-    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
-
-    //     plateau.add_rover("r1", Point::new(0, 1), Direction::East).unwarp();
-    //     plateau.add_rover("r2", Point::new(1, 1), Direction::North).unwrap();
-
-    //     // r1 cannot move east: r2 is blocking it
-    //     plateau.move_rover("r1").unwrap()
-    //     assert_eq!(plateau.rover("r1").unwrap().point, Point::new(0, 1));
-    //     // assert_eq!(plateau.rover_position("r1"), Point::new(0, 1));
-
-    //     // // Move r2
-    //     // rover2.step();
-
-    //     // // Now r1 can move
-    //     // rover1.step();
-    //     // assert_eq!(rover1.point, Point::new(1, 1));
-    // }
-
+        // Now r1 can move
+        plateau.move_rover("R1");
+        assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(1, 1));
+    }
 }
