@@ -63,6 +63,11 @@ impl Plateau {
         if self.rover_exists(&name) {
             return Err("Rover already exists");
         }
+
+        if !self.contains(&point) {
+            return Err("Point outside of plateau");
+        }
+
         let rover = Rover::new(point, direction);
         self.rovers.insert(name, rover);
         return Ok(());
@@ -72,7 +77,7 @@ impl Plateau {
         self.rovers.contains_key(name)
     }
 
-    fn is_valid(&self, point: &Point) -> bool {
+    fn contains(&self, point: &Point) -> bool {
         point.x <= self.ne.x && point.x >= self.sw.x && point.y <= self.ne.y && point.y >= self.sw.y
     }
 
@@ -118,13 +123,6 @@ mod tests {
     // }
 
     // #[test]
-    // fn init_rover_error() {
-    //     let plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
-    //     let result = Rover::new(String::from("some name"), Point::new(0,0), Direction::East, plateau);
-    //     assert!(result.is_err())
-    // }
-
-    // #[test]
     // fn step_rover() {
     //     let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
     //     let mut rover = Rover::new(
@@ -161,6 +159,14 @@ mod tests {
         plateau.add_rover(String::from("My Rover"), Point::new(0, 0), Direction::East).unwrap();
         assert_eq!(plateau.rover_exists("My Rover"), true);
     }
+
+    #[test]
+    fn add_rover_outside_of_plateau_error() {
+        let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+        let result = plateau.add_rover(String::from("R1"), Point::new(20, 20), Direction::East);
+        assert!(result.is_err())
+    }
+
 
     // #[test]
     // fn is_point_on_plateau() {
