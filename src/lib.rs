@@ -291,6 +291,10 @@ mod tests {
         plateau.move_rover("R1").unwrap();
         // end of plateau, should no longer move
         assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(10, 9));
+        // but if we turn it is can move
+        plateau.turn_rover_right("R1").unwrap();
+        plateau.move_rover("R1").unwrap();
+        assert_eq!(plateau.rover_position("R1").unwrap(), Point::new(10, 8));
     }
 
     #[test]
