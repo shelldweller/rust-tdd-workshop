@@ -1,4 +1,5 @@
 use std::cmp;
+use std::collections::HashMap;
 
 enum Direction {
     North,
@@ -29,10 +30,8 @@ impl PartialEq for Point {
 }
 
 struct Rover {
-    name: String,
     point: Point,
     direction: Direction,
-    plateau: Plateau,
 }
 
 // -- Plateau
@@ -40,6 +39,7 @@ struct Rover {
 struct Plateau {
     sw: Point,
     ne: Point,
+    rovers: HashMap<String, Rover>,
 }
 
 impl Plateau {
@@ -55,7 +55,21 @@ impl Plateau {
         Self {
             sw: sw,
             ne: ne,
+            rovers: HashMap::new(),
         }
+    }
+
+    fn add_rover(&mut self, name: String, point: Point, direction: Direction) -> Result<(), &str> {
+        if self.rover_exists(&name) {
+            return Err("Rover already exists");
+        }
+        let rover = Rover::new(point, direction);
+        self.rovers.insert(name, rover);
+        return Ok(());
+    }
+
+    fn rover_exists(&self, name: &str) -> bool {
+        self.rovers.contains_key(name)
     }
 
     fn is_valid(&self, point: &Point) -> bool {
@@ -65,31 +79,25 @@ impl Plateau {
 }
 
 impl Rover {
-    fn new(name: String, point: Point, direction: Direction, plateau: Plateau) -> Result<Self, String> {
-        if plateau.is_valid(&point) {
-            Ok(Self {
-                name: name,
-                point: point,
-                direction: direction,
-                plateau: plateau,
-            })
-        } else {
-            Err(String::from(format!("Point {:?} is not on plateau", point)))
+    fn new(point: Point, direction: Direction) -> Self {
+        Self {
+            point: point,
+            direction: direction,
         }
     }
 
-    fn step(&mut self) {
-        let next_point = match self.direction {
-            Direction::North => Point::new(self.point.x, self.point.y + 1),
-            Direction::East => Point::new(self.point.x + 1, self.point.y),
-            Direction::South => Point::new(self.point.x, self.point.y - 1),
-            Direction::West => Point::new(self.point.x -1, self.point.y),
-        };
-        if self.plateau.is_valid(&next_point) {
-            self.point.x = next_point.x;
-            self.point.y = next_point.y;
-        }
-    }
+    // fn step(&mut self) {
+    //     let next_point = match self.direction {
+    //         Direction::North => Point::new(self.point.x, self.point.y + 1),
+    //         Direction::East => Point::new(self.point.x + 1, self.point.y),
+    //         Direction::South => Point::new(self.point.x, self.point.y - 1),
+    //         Direction::West => Point::new(self.point.x -1, self.point.y),
+    //     };
+    //     if self.plateau.is_valid(&next_point) {
+    //         self.point.x = next_point.x;
+    //         self.point.y = next_point.y;
+    //     }
+    // }
 }
 
 
@@ -98,40 +106,40 @@ mod tests {
     use super::{Point, Direction, Rover, Plateau};
 
     #[test]
-    fn init_rover_success() {
-        let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
-        let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau).unwrap();
-        match rover.direction {
-            Direction::East => assert!(true),
-            _ => assert!(false),
-        }
-        assert_eq!(rover.name, String::from("some name"));
-        assert_eq!(rover.point, Point::new(3, 4));
-    }
+    // fn init_rover_success() {
+    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
+    //     let rover = Rover::new(String::from("some name"), Point::new(3,4), Direction::East, plateau).unwrap();
+    //     match rover.direction {
+    //         Direction::East => assert!(true),
+    //         _ => assert!(false),
+    //     }
+    //     assert_eq!(rover.name, String::from("some name"));
+    //     assert_eq!(rover.point, Point::new(3, 4));
+    // }
 
-    #[test]
-    fn init_rover_error() {
-        let plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
-        let result = Rover::new(String::from("some name"), Point::new(0,0), Direction::East, plateau);
-        assert!(result.is_err())
-    }
+    // #[test]
+    // fn init_rover_error() {
+    //     let plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+    //     let result = Rover::new(String::from("some name"), Point::new(0,0), Direction::East, plateau);
+    //     assert!(result.is_err())
+    // }
 
-    #[test]
-    fn step_rover() {
-        let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
-        let mut rover = Rover::new(
-            String::from("some name"),
-            Point::new(9,9),
-            Direction::East,
-            plateau
-        ).unwrap();
-        rover.step();
-        assert_eq!(rover.point, Point::new(10, 9));
+    // #[test]
+    // fn step_rover() {
+    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(10, 10));
+    //     let mut rover = Rover::new(
+    //         String::from("some name"),
+    //         Point::new(9,9),
+    //         Direction::East,
+    //         plateau
+    //     ).unwrap();
+    //     rover.step();
+    //     assert_eq!(rover.point, Point::new(10, 9));
 
-        rover.step();
-        // end of plateau, should no longer move
-        assert_eq!(rover.point, Point::new(10, 9));
-    }
+    //     rover.step();
+    //     // end of plateau, should no longer move
+    //     assert_eq!(rover.point, Point::new(10, 9));
+    // }
 
     #[test]
     fn init_plateau_basic() {
@@ -148,13 +156,59 @@ mod tests {
     }
 
     #[test]
-    fn is_point_on_plateau() {
-        let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
-        assert!(plateau.is_valid(&Point::new(1, 1)));
-
-        assert!(!plateau.is_valid(&Point::new(0, 1)));
-        assert!(!plateau.is_valid(&Point::new(1, 0)));
-        assert!(!plateau.is_valid(&Point::new(101, 1)));
-        assert!(!plateau.is_valid(&Point::new(1, 101)));
+    fn add_rover_success() {
+        let mut plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
+        plateau.add_rover(String::from("My Rover"), Point::new(0, 0), Direction::East).unwrap();
+        assert_eq!(plateau.rover_exists("My Rover"), true);
     }
+
+    // #[test]
+    // fn is_point_on_plateau() {
+    //     let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
+    //     assert!(plateau.is_valid(&Point::new(1, 1)));
+
+    //     assert!(!plateau.is_valid(&Point::new(0, 1)));
+    //     assert!(!plateau.is_valid(&Point::new(1, 0)));
+    //     assert!(!plateau.is_valid(&Point::new(101, 1)));
+    //     assert!(!plateau.is_valid(&Point::new(1, 101)));
+    // }
+
+    // #[test]
+    // fn move_collision(){
+    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
+    //     let mut rover1 = Rover::new(String::from("r1"), Point::new(0, 1), Direction::East, plateau).unwrap();
+    //     let mut rover2 = Rover::new(String::from("r2"), Point::new(1, 1), Direction::North, plateau).unwrap();
+
+    //     // r1 cannot move east: r2 is blocking it
+    //     rover1.step();
+    //     assert_eq!(rover1.point, Point::new(0, 1));
+
+    //     // Move r2
+    //     rover2.step();
+
+    //     // Now r1 can move
+    //     rover1.step();
+    //     assert_eq!(rover1.point, Point::new(1, 1));
+    // }
+
+    // #[test]
+    // fn refactoring(){
+    //     let plateau = Plateau::new(Point::new(0, 0), Point::new(100, 100));
+
+    //     plateau.add_rover("r1", Point::new(0, 1), Direction::East).unwarp();
+    //     plateau.add_rover("r2", Point::new(1, 1), Direction::North).unwrap();
+
+    //     // r1 cannot move east: r2 is blocking it
+    //     plateau.move_rover("r1").unwrap()
+    //     assert_eq!(plateau.rover("r1").unwrap().point, Point::new(0, 1));
+    //     // assert_eq!(plateau.rover_position("r1"), Point::new(0, 1));
+
+    //     // // Move r2
+    //     // rover2.step();
+
+    //     // // Now r1 can move
+    //     // rover1.step();
+    //     // assert_eq!(rover1.point, Point::new(1, 1));
+    // }
+
 }
