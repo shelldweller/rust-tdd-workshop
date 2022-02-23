@@ -164,7 +164,15 @@ mod tests {
     fn add_rover_outside_of_plateau_error() {
         let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
         let result = plateau.add_rover(String::from("R1"), Point::new(20, 20), Direction::East);
-        assert!(result.is_err())
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn add_rover_multiple_times_error() {
+        let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+        plateau.add_rover(String::from("R1"), Point::new(5, 5), Direction::East).unwrap();
+        let result = plateau.add_rover(String::from("R1"), Point::new(6, 5), Direction::East);
+        assert!(result.is_err());
     }
 
 
