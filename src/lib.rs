@@ -1,6 +1,7 @@
 use std::cmp;
 use std::collections::HashMap;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum Direction {
     North,
     East,
@@ -131,6 +132,45 @@ impl Plateau {
         false
     }
 
+    fn turn_rover_right(&mut self, name: &str) -> Result<(), &str> {
+        if !self.rover_exists(&name) {
+            return Err("Invalid rover name");
+        }
+
+        let mut rover = self.rovers.get_mut(name).unwrap();
+        let next_direction = match rover.direction {
+            Direction::East => Direction::South,
+            Direction::South => Direction::West,
+            Direction::West => Direction::North,
+            Direction::North => Direction::East,
+        };
+        rover.direction = next_direction;
+        Ok(())
+    }
+
+    fn turn_rover_left(&mut self, name: &str) -> Result<(), &str> {
+        if !self.rover_exists(&name) {
+            return Err("Invalid rover name");
+        }
+
+        let mut rover = self.rovers.get_mut(name).unwrap();
+        let next_direction = match rover.direction {
+            Direction::East => Direction::North,
+            Direction::North => Direction::West,
+            Direction::West => Direction::South,
+            Direction::South => Direction::East,
+        };
+        rover.direction = next_direction;
+        Ok(())
+    }
+
+    fn rover_direction(&self, name: &str) -> Result<Direction, &str> {
+        if !self.rover_exists(&name) {
+            return Err("Invalid rover name");
+        }
+        Ok(self.rovers.get(name).unwrap().direction)
+    }
+
     fn contains(&self, point: &Point) -> bool {
         point.x <= self.ne.x && point.x >= self.sw.x && point.y <= self.ne.y && point.y >= self.sw.y
     }
@@ -198,6 +238,43 @@ mod tests {
         assert!(!plateau.contains(&Point::new(101, 1)));
         assert!(!plateau.contains(&Point::new(1, 101)));
         assert!(!plateau.contains(&Point::new(-1, 1001)));
+    }
+
+    #[test]
+    fn turn_rover() {
+        let mut plateau = Plateau::new(Point::new(1, 1), Point::new(10, 10));
+        plateau.add_rover("R1", Point::new(5, 5), Direction::East).unwrap();
+
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::East);
+
+        // Turn right
+
+        plateau.turn_rover_right("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::South);
+
+        plateau.turn_rover_right("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::West);
+
+        plateau.turn_rover_right("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::North);
+
+        plateau.turn_rover_right("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::East);
+
+        // Turn left
+
+        plateau.turn_rover_left("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::North);
+
+        plateau.turn_rover_left("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::West);
+
+        plateau.turn_rover_left("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::South);
+
+        plateau.turn_rover_left("R1").unwrap();
+        assert_eq!(plateau.rover_direction("R1").unwrap(), Direction::East);
+
     }
 
     #[test]
