@@ -176,16 +176,19 @@ mod tests {
     }
 
 
-    // #[test]
-    // fn is_point_on_plateau() {
-    //     let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
-    //     assert!(plateau.is_valid(&Point::new(1, 1)));
+    #[test]
+    fn plateau_contains_point() {
+        let plateau = Plateau::new(Point::new(1, 1), Point::new(100, 100));
+        assert!(plateau.contains(&Point::new(1, 1)));
+        assert!(plateau.contains(&Point::new(10, 10)));
+        assert!(plateau.contains(&Point::new(100, 100)));
 
-    //     assert!(!plateau.is_valid(&Point::new(0, 1)));
-    //     assert!(!plateau.is_valid(&Point::new(1, 0)));
-    //     assert!(!plateau.is_valid(&Point::new(101, 1)));
-    //     assert!(!plateau.is_valid(&Point::new(1, 101)));
-    // }
+        assert!(!plateau.contains(&Point::new(0, 1)));
+        assert!(!plateau.contains(&Point::new(1, 0)));
+        assert!(!plateau.contains(&Point::new(101, 1)));
+        assert!(!plateau.contains(&Point::new(1, 101)));
+        assert!(!plateau.contains(&Point::new(-1, 1001)));
+    }
 
     // #[test]
     // fn move_collision(){
