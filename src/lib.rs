@@ -34,6 +34,16 @@ struct Rover {
     direction: Direction,
 }
 
+impl Rover {
+    fn new(point: Point, direction: Direction) -> Self {
+        Self {
+            point: point,
+            direction: direction,
+        }
+    }
+}
+
+
 // -- Plateau
 
 struct Plateau {
@@ -125,15 +135,6 @@ impl Plateau {
         point.x <= self.ne.x && point.x >= self.sw.x && point.y <= self.ne.y && point.y >= self.sw.y
     }
 
-}
-
-impl Rover {
-    fn new(point: Point, direction: Direction) -> Self {
-        Self {
-            point: point,
-            direction: direction,
-        }
-    }
 }
 
 
